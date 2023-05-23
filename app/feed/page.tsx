@@ -1,12 +1,11 @@
-import { promises as fs } from "fs";
-import path from "path";
-import { Card } from "./Card";
 import Link from "next/link";
-import { Posts } from "../types";
-import { getPosts } from "../lib/posts.server";
+import { getPosts } from "../lib/posts";
+import { Card } from "./Card";
+
+export const revalidate = 5;
 
 export default async function FeedRoute() {
-  const data = await getPosts();
+  const posts = await getPosts();
 
   return (
     <>
@@ -18,8 +17,8 @@ export default async function FeedRoute() {
         <span className="sm:hidden block text-lg">+</span>
       </Link>
       <div className="flex flex-col lg:grid grid-cols-3 auto-rows-fr gap-2 mt-4">
-        {data.posts.map((post) => (
-          <Card key={post.id} {...post}/>
+        {posts.map((post) => (
+          <Card key={post.id} {...post} />
         ))}
       </div>
     </>

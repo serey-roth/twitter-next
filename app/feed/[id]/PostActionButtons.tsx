@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 type PostActionButtonsProps = {
-  postId?: number;
+  postId?: string;
 };
 
-async function deletePost(id: number) {
+async function deletePost(id: string) {
   return fetch(`/feed/api/${id}`, {
     method: "delete",
   });

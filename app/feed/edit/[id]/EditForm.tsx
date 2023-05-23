@@ -1,16 +1,16 @@
 "use client";
 
-import { Post } from "@/app/types";
+import { Post } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { SubmitHandler, useForm } from "react-hook-form";
 
-async function editPost(id: number, newPost: Post) {
+async function editPost(id: string, newPost: Post) {
   const result = await fetch(`/feed/api/${id}`, {
     method: "put",
     body: JSON.stringify(newPost),
   }).then((res) => res.json());
   return result as {
-    post?: { id: number } & Post;
+    post?: Pick<Post, "title" | "id" | "content">;
     errors?: {
       title?: string[];
       content?: string[];
@@ -21,7 +21,7 @@ async function editPost(id: number, newPost: Post) {
 export default function EditForm({
   post,
 }: {
-  post: ({ id: number } & Post) | undefined;
+  post: Pick<Post, "title" | "id" | "content"> | null;
 }) {
   const {
     register,
