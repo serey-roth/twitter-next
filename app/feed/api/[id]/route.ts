@@ -1,14 +1,15 @@
-import { deletePost, editPost } from "@/app/lib/posts.server";
-import { revalidatePath } from "next/cache";
+import { deletePost, editPost } from "@/app/lib/posts";
 import { NextRequest, NextResponse } from "next/server";
 import { PostSchema } from "../route";
+import { revalidatePath } from "next/cache";
 
 export async function DELETE(request: NextRequest) {
   const path = new URL(request.url).pathname;
   const id = path.split("/")[3];
-  await deletePost(Number.parseInt(id));
-  revalidatePath("/feed");
-  return new NextResponse(JSON.stringify(true), {
+  const post = await deletePost(id);
+  revalidatePath("app/feed");
+  revalidatePath("app/feed/[id]");
+  return new NextResponse(JSON.stringify(post), {
     status: 200,
   });
 }
@@ -18,14 +19,12 @@ export async function PUT(request: NextRequest) {
   const id = path.split("/")[3];
   const result = PostSchema.safeParse(await request.json());
   if (result.success) {
-    await editPost(Number.parseInt(id), result.data);
-    revalidatePath("/feed");
+    const newPost = await editPost(id, result.data);
+    revalidatePath("app/feed");
+    revalidatePath("app/feed/[id]");
     return new NextResponse(
       JSON.stringify({
-        post: {
-          ...result.data,
-          id: Number.parseInt(id),
-        },
+        post: newPost,
         errors: undefined,
       }),
       {
@@ -44,4 +43,8 @@ export async function PUT(request: NextRequest) {
       }
     );
   }
+}
+
+export async function GET(request: NextRequest) {
+  return NextResponse.json({});
 }
