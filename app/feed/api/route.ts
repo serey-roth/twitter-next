@@ -1,11 +1,11 @@
-import { addPost } from "@/app/lib/posts.server";
+import { addPost } from "@/app/lib/posts";
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 export const PostSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters long!"),
-  content: z.string().max(50, "Content must be at most 50 characters long!"),
+  content: z.string(),
 });
 
 export async function POST(request: NextRequest) {
