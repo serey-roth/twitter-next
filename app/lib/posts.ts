@@ -1,65 +1,49 @@
-"use server";
+import { prisma } from "@/prisma/database";
+import { Post } from "@prisma/client";
+import { cache } from "react";
+import "server-only";
 
-import path from "path";
-import { promises as fs } from "fs";
-import { Post, Posts } from "../types";
-import { redirect } from "next/navigation";
-import { NextResponse } from "next/server";
+export const preload = (id: string) => {
+  void getPost(id);
+};
 
-const jsonPath = path.join(process.cwd(), "/app/feed/posts.json");
+export const getPosts = cache(() => {
+  return prisma.post.findMany({
+    select: {
+      id: true,
+      title: true,
+      content: true,
+    },
+  });
+});
 
-export async function getPosts() {
-  const data = await fs.readFile(jsonPath, "utf-8");
-  return JSON.parse(data) as Posts;
+export const getPost = cache((id: string) => {
+  return prisma.post.findUnique({
+    where: { id },
+  });
+});
+
+export async function addPost(data: Pick<Post, "title" | "content">) {
+  const post = await prisma.post.create({
+    data,
+  });
+  return post;
 }
 
-export async function getPost(id: number) {
-  const { posts } = await getPosts();
-  return posts.find((post) => post.id === id);
+export async function deletePost(id: string) {
+  const post = await prisma.post.delete({ where: { id } });
+  return post;
 }
 
-export async function addPost(data: Post) {
-  const fileData = await getPosts();
-  await fs.writeFile(
-    jsonPath,
-    JSON.stringify({
-      posts: [
-        ...fileData.posts,
-        {
-          id: fileData.posts.length + 1,
-          title: data.title,
-          content: data.content,
-        },
-      ],
-    })
-  );
-}
-
-export async function deletePost(id: number) {
-  const fileData = await getPosts();
-  await fs.writeFile(
-    jsonPath,
-    JSON.stringify({
-      posts: fileData.posts.filter((post) => post.id !== id),
-    })
-  );
-}
-
-export async function editPost(id: number, newPost: Post) {
-  const { posts } = await getPosts();
-  await fs.writeFile(
-    jsonPath,
-    JSON.stringify({
-      posts: posts.map((post) =>
-        post.id === id
-          ? {
-              ...post,
-              ...newPost,
-            }
-          : post
-      ),
-    })
-  );
+export async function editPost(
+  id: string,
+  newPost: Pick<Post, "title" | "content">
+) {
+  const post = await prisma.post.update({
+    where: { id },
+    data: newPost,
+  });
+  return post;
 }
 
 // function withValidate<TValues, TErrors>(
